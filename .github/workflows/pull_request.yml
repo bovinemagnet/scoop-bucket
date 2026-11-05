@@ -13,7 +13,8 @@ permissions:
 jobs:
   pullRequestHandler:
     name: Pull Request Handler
-    if: github.event_name == 'pull_request' || (github.event.issue.pull_request && startsWith(github.event.comment.body, '/verify'))
+    # A /verify comment runs the pull request's manifests with a write token, so only from the owner and collaborators.
+    if: github.event_name == 'pull_request' || (github.event.issue.pull_request && startsWith(github.event.comment.body, '/verify') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: windows-latest
     steps:
       - name: Checkout

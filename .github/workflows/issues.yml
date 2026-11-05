@@ -12,7 +12,9 @@ permissions:
 jobs:
   issueHandler:
     name: Issue Handler
-    if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
+    # The handler can commit a new hash to main, so it runs for issues opened by the owner and
+    # collaborators, or when one of them adds the verify label (which needs triage access).
+    if: (github.event.action == 'opened' && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)) || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
     runs-on: windows-latest
     steps:
       - name: Checkout
