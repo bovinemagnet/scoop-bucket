@@ -1,0 +1,42 @@
+{
+    "version": "0.7.0",
+    "description": "Native desktop editor for AsciiDoc and Antora documentation, with its command-line tools, language server and MCP server.",
+    "homepage": "https://github.com/bovinemagnet/AdocFoundry",
+    "license": "Apache-2.0",
+    "notes": "Update with 'scoop update adocfoundry'. The app's own Update… is for the MSI.",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/bovinemagnet/AdocFoundry/releases/download/v0.7.0/AdocFoundry-0.7.0-windows-x64.zip",
+            "hash": "4c078631d8fcdb602e44e716aba2c0caac11e0831aaa58769e65b3e8765b1b11"
+        },
+        "arm64": {
+            "url": "https://github.com/bovinemagnet/AdocFoundry/releases/download/v0.7.0/AdocFoundry-0.7.0-windows-arm64.zip",
+            "hash": "131471cab806dce024b321447ae6d9669ffa2a4b6a324eab3dc60fea5717520c"
+        }
+    },
+    "bin": [
+        "adocfoundry-cli.exe",
+        "adoc-ls.exe",
+        "adoc-mcp.exe"
+    ],
+    "shortcuts": [
+        [
+            "adocfoundry.exe",
+            "AdocFoundry"
+        ]
+    ],
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/bovinemagnet/AdocFoundry/releases/download/v$version/AdocFoundry-$version-windows-x64.zip"
+            },
+            "arm64": {
+                "url": "https://github.com/bovinemagnet/AdocFoundry/releases/download/v$version/AdocFoundry-$version-windows-arm64.zip"
+            }
+        },
+        "hash": {
+            "url": "$baseurl/SHA256SUMS"
+        }
+    }
+}

@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        shell: [powershell, pwsh]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - name: Checkout Bucket
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Need at least 2 commits to properly gather changed files for linting
+          fetch-depth: 2
+          path: 'my_bucket'
+      - name: Checkout Scoop
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ScoopInstaller/Scoop
+          path: 'scoop_core'
+      - name: Install and cache test dependencies
+        uses: potatoqualitee/psmodulecache@9e4b63833c22c1768d648e115a9c849afdda22a5 # v6.3
+        with:
+          modules-to-cache: BuildHelpers, Pester
+          shell: ${{ matrix.shell }}
+      - name: Run tests
+        run: |
+          $env:SCOOP_HOME="$(Convert-Path '.\scoop_core')"
+          .\my_bucket\bin\test.ps1
+
+  install:
+    name: Install AdocFoundry
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout Bucket
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Scoop
+        run: |
+          Invoke-RestMethod -Uri https://get.scoop.sh -OutFile install.ps1
+          .\install.ps1 -RunAsAdmin
+          Join-Path $HOME 'scoop\shims' | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+      - name: Install from the manifest
+        run: |
+          scoop install .\bucket\adocfoundry.json
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+      - name: Run the tools
+        run: |
+          foreach ($tool in 'adocfoundry-cli', 'adoc-ls', 'adoc-mcp') {
+            $version = & $tool --version
+            if ($LASTEXITCODE -ne 0) { throw "$tool --version failed" }
+            Write-Output $version
+          }
+          $app = Join-Path (scoop prefix adocfoundry) 'adocfoundry.exe'
+          if (-not (Test-Path $app)) { throw "adocfoundry.exe is missing" }
+          $shortcut = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Scoop Apps\AdocFoundry.lnk'
+          if (-not (Test-Path $shortcut)) { throw "the Start menu shortcut is missing" }
+      - name: Uninstall
+        run: |
+          scoop uninstall adocfoundry
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          if (Get-Command adocfoundry-cli -ErrorAction SilentlyContinue) { throw "adocfoundry-cli is still on PATH" }
