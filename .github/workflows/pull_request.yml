@@ -1,10 +1,11 @@
 name: Pull Requests
 
+# Checks a pull request's manifests when it is opened. There is no /verify comment trigger: it
+# would run the pull request's head as it stands then, which can change after the comment.
+# Re-run this workflow from the Actions tab instead.
 on:
   pull_request:
     types: [opened]
-  issue_comment:
-    types: [created]
 
 permissions:
   contents: read
@@ -13,8 +14,6 @@ permissions:
 jobs:
   pullRequestHandler:
     name: Pull Request Handler
-    # A /verify comment runs the pull request's manifests with a write token, so only from the owner and collaborators.
-    if: github.event_name == 'pull_request' || (github.event.issue.pull_request && startsWith(github.event.comment.body, '/verify') && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: windows-latest
     steps:
       - name: Checkout
